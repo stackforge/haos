@@ -1,0 +1,15 @@
+{
+    "shaiker_controller.sample_print": [
+        {
+            "runner": {
+                "type": "serial",
+                "times": 5,
+            },
+            "context": {
+                "cloud_nodes": {
+                    "controllers": ["1", "2", "3"]
+                }
+            }
+        }
+    ]
+}
