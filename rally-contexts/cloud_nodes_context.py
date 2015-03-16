@@ -16,7 +16,7 @@ class CloudNodesContext(base.Context):
         "additionalProperties": False,
         "properties": {
             "controllers": {
-                "type": "list",
+                "type": "array",
                 "default": []
             }
         }
