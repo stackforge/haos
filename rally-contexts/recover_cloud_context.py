@@ -40,6 +40,6 @@ class CloudNodesContext(base.Context):
     def cleanup(self):
         """This method is called after the task finish"""
         for action in self.context["done_actions"]:
-            ## we need to import shaiker somehow :)
+            ## we need to import shaker somehow :)
             shaiker.run_command_on_node(action["node"],
                                         ACTIONS[action["command"]]["undo"])
