@@ -1,7 +1,7 @@
 from rally.benchmark.scenarios import base
 
 
-class shaiker_controller(base.Scenario):
+class shaker_controller(base.Scenario):
     """Sample plugin for shaiker."""
 
     @base.scenario()

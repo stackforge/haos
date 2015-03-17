@@ -1,5 +1,5 @@
 {
-    "shaiker_controller.sample_print": [
+    "shaker_controller.sample_print": [
         {
             "runner": {
                 "type": "serial",
