@@ -3,10 +3,12 @@ from rally.benchmark.scenarios import base
 
 class BaseDisasterScenario(base.Scenario):
 
-    def boot_vm(self):
-        self._boot_server(self.context["shaker_image"],
-                          self.context["default_flavor",
-                          {"auto_assign_nic": True})
+    def boot_vm(self, name):
+        nova = self.admin_clients("nova")
+        vm = nova.servers.create(name=name,
+                                 image=self.context["shaker_image"],
+                                 flavor=self.context["default_flavor"],
+                                 {"auto_assign_nic": True})
 
     def execute_command_on_shaker_node(self, node, command):
         return None
