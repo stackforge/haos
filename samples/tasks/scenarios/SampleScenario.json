@@ -1,13 +1,41 @@
 {
-    "shaker_controller.sample_print": [
+    "RabbitMQDisasterScenarios.power_off_one_cantroller": [
         {
             "runner": {
                 "type": "serial",
                 "times": 5,
             },
             "context": {
+                "recover_cloud": {
+                    "checks": ["rabbitmq_cluster_status", ]
+                },
                 "cloud_nodes": {
-                    "controllers": ["1", "2", "3"]
+                    "controllers": [
+                        {
+                            "shaker_agent_id": "1",
+                            "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-1",
+                            "hardware_power_off_cmd": "VBoxManage controlvm fuel-slave-1 poweroff",
+                            "power_off_timeout": 20,
+                            "power_on_timeout": 30
+                        },
+                        {
+                            "shaker_agent_id": "2",
+                            "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-2",
+                            "hardware_power_off_cmd": "VBoxManage controlvm fuel-slave-2 poweroff",
+                            "power_off_timeout": 20,
+                            "power_on_timeout": 30
+                        },
+                        {
+                            "shaker_agent_id": "3",
+                            "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-3",
+                            "hardware_power_off_cmd": "VBoxManage controlvm fuel-slave-3 poweroff",
+                            "power_off_timeout": 20,
+                            "power_on_timeout": 30
+                        }
+                    ],
+                    "power_control_node": {
+                        "shaker_agent_id": "localhost"
+                    }
                 }
             }
         }

@@ -6,7 +6,7 @@ from rally import osclients
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="recover_cloud", order=999)
+@base.context(name="recover_cloud", order=900)
 class CloudNodesContext(base.Context):
     """This context allows to recover cloud after disaster tests"""
 
@@ -14,32 +14,56 @@ class CloudNodesContext(base.Context):
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
         "additionalProperties": False,
-        "properties": {}
-    }
-
-    ACTIONS = {
-        "stop rabbitmq service": {
-            "do": "/etc/init.d/rabbitmq-server stop",
-            "undo": "/etc/init.d/rabbitmq-server start"
-        },
-        "ban rabbitmq service with pcs": {
-            "do": "pcs resource ban rabbitmq",
-            "undo": "pcs resource clear rabbitmq"
+        "properties": {
+            "checks": {
+                "type": "array",
+                "default": []
+            }
         }
     }
 
+    def check_rabbitmq_cluster_status(self, controllers):
+        command = "rabbitmqctl cluster_status"
+
+        for controller in controllers:
+            output = self.run_command(controller["shaker_agent_id"], command)
+            for line in output.splitlines():
+                if "nodes" in line and "running_nodes" not in line:
+                    nodes = [node for node in line.split("'")
+                             if "rabbit" in node]
+                if "running_nodes" in line:
+                    active_nodes = [node for node in line.split("'")
+                                    if "rabbit" in node]
+            for node in nodes:
+                if node not in active_nodes:
+                    return False
+        return True
+
+    def run_command(self, node, command, recover_command=None,
+                    recover_timeout=0):
+        if recover_cmd is not None:
+            action = {"node": node, "command": command,
+                      "timeout": recover_timeout}
+            self.context["recover_commands"].append(action)
+
+        r = requests.post("http://{0}/run_command".format(node),
+                          headers={"Content-Type": "application/json"},
+                          data=json.dumps({"command": command}))
+
+        return r.text
+
     def setup(self):
         """This method is called before the task start"""
-        self.context["actions"] = self.ACTIONS
-
-        # done_actions contains information about name of shaker_id
-        # and action name which were executed, example:
-        # self.context["done_actions"] = [{"name": "node-1", "command": "ls"}]
-        self.context["done_actions"] = []
+        self.context["recover_commands"] = []
+        self.context["checks"] = self.config.get("checks", [])
 
     def cleanup(self):
         """This method is called after the task finish"""
-        for action in self.context["done_actions"]:
-            ## we need to import shaker somehow :)
-            shaker.run_command_on_node(action["node"],
-                                        ACTIONS[action["command"]]["undo"])
+        for action in self.context["recover_commands"]:
+            self.run_command(action["node"], action["command"])
+            time.sleep(action.get("timeout", 0))
+
+        controllers = self.context["controllers"]
+        if "rabbitmq_cluster_status" in self.context["checks"]:
+            if self.check_rabbitmq_cluster_status(controllers) is False:
+                raise "RabbitMQ cluster wasn't recovered"

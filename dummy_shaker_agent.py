@@ -10,7 +10,7 @@ def run_command():
     r = request.get_json(force=True)
     process = subprocess.Popen(r["command"].split(), stdout=subprocess.PIPE)
     output = process.communicate()[0]
-    
+
     return output
 
 

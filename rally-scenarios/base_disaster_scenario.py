@@ -1,5 +1,7 @@
 import json
 import requests
+import time
+
 from rally.benchmark.scenarios import base
 
 
@@ -11,22 +13,28 @@ class BaseDisasterScenario(base.Scenario):
                                  image=self.context["shaker_image"],
                                  flavor=self.context["default_flavor"],
                                  {"auto_assign_nic": True})
+        return vm
 
-    def execute_command_on_shaker_node(self, node, command):
-        cmd = {"command": command}
+    def run_command(self, node, command, recover_command=None):
+        if recover_cmd is not None:
+            action = {"node": node, "command": command}
+            self.context["recover_commands"].append(action)
+
         r = requests.post("http://{0}/run_command".format(node),
                           headers={"Content-Type": "application/json"},
-                          data=json.dumps(cmd))
+                          data=json.dumps({"command": command}))
 
         return r.text
 
-    def run_command(self, node, command):
-        return self.execute_command_on_shaker_node(node, command)
+    def power_off_controller(self, controller_id):
+        control_node = self.context["power_control_node"]
+        controller = self.context["controllers"][controller_id]
 
-    def run_disaster_command(self, node, command):
-        do = self.context["actions"][command]["do"]
+        self.run_command(control_node["shaker_agent_id"],
+                         command=controller["hardware_power_off_cmd"],
+                         recover_command=controller["hardware_power_on_cmd"],
+                         recover_timeout=controller["power_on_timeout"])
+        time.sleep(controller["power_off_timeout"])
 
-        done = {"node": node, "command": command}
-        self.context["done_actions"].append(done)
-
-        self.execute_command_on_shaker_node(node, command)
+    def power_off_main_controller(self):
+        pass
