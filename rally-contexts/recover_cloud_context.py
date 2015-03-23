@@ -1,3 +1,4 @@
+import time
 import json
 import requests
 from rally.benchmark.context import base
@@ -51,7 +52,7 @@ class CloudNodesContext(base.Context):
     def run_command(self, node, command, recover_command=None,
                     recover_timeout=0):
         if recover_command is not None:
-            action = {"node": node, "command": command,
+            action = {"node": node, "command": recover_command,
                       "timeout": recover_timeout}
             self.context["recover_commands"].append(action)
 

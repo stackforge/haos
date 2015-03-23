@@ -13,21 +13,21 @@
                     "controllers": [
                         {
                             "shaker_agent_id": "172.16.0.4:1000",
-                            "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-2",
+                            "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-2 --type headless",
                             "hardware_power_off_cmd": "VBoxManage controlvm fuel-slave-2 poweroff",
                             "power_off_timeout": 20,
                             "power_on_timeout": 30
                         },
                         {
                             "shaker_agent_id": "172.16.0.5:1000",
-                            "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-5",
+                            "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-5 --type headless",
                             "hardware_power_off_cmd": "VBoxManage controlvm fuel-slave-5 poweroff",
                             "power_off_timeout": 20,
                             "power_on_timeout": 30
                         },
                         {
                             "shaker_agent_id": "172.16.0.6:1000",
-                            "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-4",
+                            "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-4 --type headless",
                             "hardware_power_off_cmd": "VBoxManage controlvm fuel-slave-4 poweroff",
                             "power_off_timeout": 20,
                             "power_on_timeout": 30
