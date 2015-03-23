@@ -1,3 +1,5 @@
+import json
+import requests
 from rally.benchmark.context import base
 from rally.common import log as logging
 from rally import consts
@@ -26,6 +28,9 @@ class CloudNodesContext(base.Context):
         command = "rabbitmqctl cluster_status"
 
         for controller in controllers:
+            nodes = []
+            active_nodes = []
+
             output = self.run_command(controller["shaker_agent_id"], command)
             for line in output.splitlines():
                 if "nodes" in line and "running_nodes" not in line:
@@ -34,6 +39,10 @@ class CloudNodesContext(base.Context):
                 if "running_nodes" in line:
                     active_nodes = [node for node in line.split("'")
                                     if "rabbit" in node]
+
+            if len(nodes) == 0 or len(active_nodes) < len(nodes):
+                return False
+
             for node in nodes:
                 if node not in active_nodes:
                     return False
@@ -41,7 +50,7 @@ class CloudNodesContext(base.Context):
 
     def run_command(self, node, command, recover_command=None,
                     recover_timeout=0):
-        if recover_cmd is not None:
+        if recover_command is not None:
             action = {"node": node, "command": command,
                       "timeout": recover_timeout}
             self.context["recover_commands"].append(action)

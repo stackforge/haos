@@ -9,10 +9,11 @@ class BaseDisasterScenario(base.Scenario):
 
     def boot_vm(self, name):
         nova = self.admin_clients("nova")
+        kwargs = {"auto_assign_nic": True}
         vm = nova.servers.create(name=name,
                                  image=self.context["shaker_image"],
                                  flavor=self.context["default_flavor"],
-                                 {"auto_assign_nic": True})
+                                 **kwargs)
         return vm
 
     def run_command(self, node, command, recover_command=None):

@@ -1,9 +1,9 @@
 {
-    "RabbitMQDisasterScenarios.power_off_one_cantroller": [
+    "RabbitMQDisasterScenarios.power_off_one_controller": [
         {
             "runner": {
                 "type": "serial",
-                "times": 5,
+                "times": 1,
             },
             "context": {
                 "recover_cloud": {

@@ -20,7 +20,7 @@ class CloudNodesContext(base.Context):
                 "default": []
             },
             "power_control_node": {
-                "type": "dictionary",
+                "type": "object",
                 "default": {}
             }
         }

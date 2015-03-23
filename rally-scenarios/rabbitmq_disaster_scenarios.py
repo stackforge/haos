@@ -1,12 +1,12 @@
 import random
-import base_disaster_scenario
+from . import base_disaster_scenario
 from rally.benchmark.scenarios import base
 
 
 class RabbitMQDisasterScenarios(base_disaster_scenario.BaseDisasterScenario):
 
     @base.scenario()
-    def power_off_one_cantroller(self):
+    def power_off_one_controller(self):
         """ Poweroff one contoller and verify cloud
 
         Setup:
