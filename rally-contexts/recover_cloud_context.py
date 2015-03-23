@@ -1,6 +1,7 @@
 import time
 import json
 import requests
+import time
 from rally.benchmark.context import base
 from rally.common import log as logging
 from rally import consts
