@@ -36,9 +36,11 @@ class CloudNodesContext(base.Context):
 
     def setup(self):
         """This method is called before the task start"""
-        self.context["controllers"] = self.config.get("controllers", [])
-        power_control_node = self.config.get("power_control_node", {})
+        self.context["controllers"] = self.config.get("controllers")
+        power_control_node = self.config.get("power_control_node")
         self.context["power_control_node"] = power_control_node
+        self.context["shaker_image"] = self.config.get("shaker_image")
+        self.context["default_flavor"] = self.config.get("default_flavor")
 
     def cleanup(self):
         """This method is called after the task finish"""

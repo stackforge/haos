@@ -1,5 +1,5 @@
 import random
-from . import base_disaster_scenario
+import base_disaster_scenario
 from rally.benchmark.scenarios import base
 
 
