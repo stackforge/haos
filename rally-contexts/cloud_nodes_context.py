@@ -22,6 +22,14 @@ class CloudNodesContext(base.Context):
             "power_control_node": {
                 "type": "object",
                 "default": {}
+            },
+            "shaker_image": {
+                "type": "string",
+                "default": "TestVM"
+            },
+            "default_flavor": {
+                "type": "string",
+                "default": "m1.micro"
             }
         }
     }

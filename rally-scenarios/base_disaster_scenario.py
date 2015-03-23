@@ -16,9 +16,11 @@ class BaseDisasterScenario(base.Scenario):
                                  **kwargs)
         return vm
 
-    def run_command(self, node, command, recover_command=None):
+    def run_command(self, node, command, recover_command=None,
+                    recover_timeout=0):
         if recover_cmd is not None:
-            action = {"node": node, "command": command}
+            action = {"node": node, "command": command,
+                      "timeout": recover_timeout}
             self.context["recover_commands"].append(action)
 
         r = requests.post("http://{0}/run_command".format(node),
