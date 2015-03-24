@@ -2,8 +2,10 @@
 # 1. apt-get install -qy python-setuptools
 # 2. easy_install pip
 # 3. pip install flask
-# 4. python dummy_shaker_agent.py &
-# 5. Add to crontab on all OpenStack nodes: @reboot python /root/dummy_shaker_agent.py &
+# 4. iptables -F & service iptables save
+# 5. python dummy_shaker_agent.py &
+# 6. Add to crontab on all OpenStack nodes:
+#    @reboot python /root/dummy_shaker_agent.py &
 
 import subprocess
 from flask import Flask, request
