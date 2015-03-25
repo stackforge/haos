@@ -16,6 +16,7 @@ class BaseDisasterScenario(base.Scenario):
                                  **kwargs)
         return vm
 
+    # TODO(vrovachev): delete duplicate method on this or on context
     def run_command(self, node, command, recover_command=None,
                     recover_timeout=0):
         if recover_command is not None:

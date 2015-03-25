@@ -33,15 +33,15 @@ class CloudNodesContext(base.Context):
             active_nodes = []
 
             output = self.run_command(controller["shaker_agent_id"], command)
+            rabbit_nodes = lambda str: [node for node in str.split("'")
+                                        if "rabbit" in node]
             for line in output.splitlines():
-                if "nodes" in line and "running_nodes" not in line:
-                    nodes = [node for node in line.split("'")
-                             if "rabbit" in node]
                 if "running_nodes" in line:
-                    active_nodes = [node for node in line.split("'")
-                                    if "rabbit" in node]
+                    active_nodes = rabbit_nodes(line)
+                elif "nodes" in line:
+                    nodes = rabbit_nodes(line)
 
-            if len(nodes) == 0 or len(active_nodes) < len(nodes):
+            if not nodes or len(active_nodes) < len(nodes):
                 return False
 
             for node in nodes:

@@ -3,11 +3,11 @@
         {
             "runner": {
                 "type": "serial",
-                "times": 1,
+                "times": 1
             },
             "context": {
                 "recover_cloud": {
-                    "checks": ["rabbitmq_cluster_status", ]
+                    "checks": ["rabbitmq_cluster_status" ]
                 },
                 "cloud_nodes": {
                     "controllers": [
