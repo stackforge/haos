@@ -14,23 +14,11 @@ class RabbitMQDisasterScenarios(base_disaster_scenario.BaseDisasterScenario):
 
         Scenario:
         1. Poweroff one controller
-        2. Verify cloud: create VM 10 times, create networks,
-           volumes, upload images
+        2. Verify cloud: create VM 10 times
         """
 
-        controller_id = random.randint(0, len(self.context["controllers"]))
+        controller_id = random.randint(0, len(self.context["controllers"])-1)
         self.power_off_controller(controller_id)
 
-        vm_list = []
         for i in xrange(0, 10):
-            vm = self.boot_vm("test{0}".format(i))
-            vm_list.append(vm)
-
-        timeout = 300
-        active_vms = []
-        while timeout > 0 and len(active_vms) < 10:
-            active_vms = [vm for vm in vm_list if vm.state == "ACTIVE"]
-            timeout -= 1
-
-        if len(active_vms) < 10:
-            raise "Can't boot VMs"
+            self.boot_server("test{0}".format(i))

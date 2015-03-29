@@ -1,14 +1,10 @@
 from rally.benchmark.context import base
-from rally.common import log as logging
 from rally import consts
-from rally import osclients
-
-LOG = logging.getLogger(__name__)
 
 
 @base.context(name="cloud_nodes", order=800)
 class CloudNodesContext(base.Context):
-    """This context allows to define the list of nodes in the cloud"""
+    """This context allows to define the list of nodes in the cloud."""
 
     CONFIG_SCHEMA = {
         "type": "object",
@@ -23,6 +19,10 @@ class CloudNodesContext(base.Context):
                 "type": "object",
                 "default": {}
             },
+            "shaker_endpoint": {
+                "type": "string",
+                "default": ""
+            },
             "shaker_image": {
                 "type": "string",
                 "default": "TestVM"
@@ -35,13 +35,14 @@ class CloudNodesContext(base.Context):
     }
 
     def setup(self):
-        """This method is called before the task start"""
+        """This method is called before the task start."""
         self.context["controllers"] = self.config.get("controllers")
         power_control_node = self.config.get("power_control_node")
         self.context["power_control_node"] = power_control_node
+        self.context["shaker_endpoint"] = self.config.get("shaker_endpoint")
         self.context["shaker_image"] = self.config.get("shaker_image")
         self.context["default_flavor"] = self.config.get("default_flavor")
 
     def cleanup(self):
-        """This method is called after the task finish"""
+        """This method is called after the task finish."""
         self.context["controllers"] = []
