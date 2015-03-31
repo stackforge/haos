@@ -8,7 +8,7 @@ from rally.benchmark.scenarios.nova import utils as nova_utils
 class BaseDisasterScenario(nova_utils.NovaScenario):
 
     USER_DATA = """#!/bin/bash
-        shaker-agent --agent-id `hostname` --server-endpoint {0}
+        shaker-agent --agent-id \"$(hostname)\" --server-endpoint {0}
     """
 
     def wait_shaker_agent(self, agent_id, timeout=300):
@@ -27,7 +27,7 @@ class BaseDisasterScenario(nova_utils.NovaScenario):
                                auto_assign_nic=True,
                                **kwargs)
 
-        wait_shaker_agent(name, timeout=300)
+        self.wait_shaker_agent(name, timeout=300)
 
         return vm
 
