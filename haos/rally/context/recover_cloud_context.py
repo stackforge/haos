@@ -1,9 +1,7 @@
-import time
-
-from cloud_utils import run_command
 from rally.benchmark.context import base
-from rally import exceptions
 from rally import consts
+
+from haos.rally.utils import run_command
 
 
 @base.context(name="recover_cloud", order=900)
@@ -54,13 +52,13 @@ class CloudNodesContext(base.Context):
 
     def cleanup(self):
         """This method is called after the task finish."""
-
-        for action in self.context["recover_commands"]:
-            run_command(self.context, action["node"], action["command"],
-                        action["executor"])
-            time.sleep(action.get("timeout", 0))
-
-        controllers = self.context["controllers"]
-        if "rabbitmq_cluster_status" in self.context["checks"]:
-            if self.check_rabbitmq_cluster_status(controllers) is False:
-                raise Exception("RabbitMQ cluster wasn't recovered")
+        pass
+        # for action in self.context["recover_commands"]:
+        #     run_command(self.context, action["node"], action["command"],
+        #                 action["executor"])
+        #     time.sleep(action.get("timeout", 0))
+        #
+        # controllers = self.context["controllers"]
+        # if "rabbitmq_cluster_status" in self.context["checks"]:
+        #     if self.check_rabbitmq_cluster_status(controllers) is False:
+        #         raise Exception("RabbitMQ cluster wasn't recovered")

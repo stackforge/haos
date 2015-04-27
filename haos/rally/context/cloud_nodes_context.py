@@ -30,6 +30,10 @@ class CloudNodesContext(base.Context):
             "default_flavor": {
                 "type": "string",
                 "default": "m1.micro"
+            },
+            "shaker": {
+                "type": "object",
+                "default": {}
             }
         }
     }

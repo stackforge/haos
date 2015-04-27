@@ -1,9 +1,9 @@
 import json
-import requests
-import signal
 
 from rally import exceptions
-from shaker.lib import Shaker
+import requests
+from shaker import lib
+import signal
 
 
 def timeout_alarm(signum, frame):
@@ -20,13 +20,16 @@ def run_command(context, node, command, recover_command=None,
 
     signal.signal(signal.SIGALRM, timeout_alarm)
     signal.alarm(timeout)
-
     if executor == "dummy":
         r = requests.post("http://{0}/run_command".format(node),
                           headers={"Content-Type": "application/json"},
                           data=json.dumps({"command": command}))
         return r.text
     elif executor == "shaker":
-        shaker = Shaker(context["shaker_endpoint"], [node])
-        r = shaker.run_program(node, command)
-        return r.get('stdout')
+        shaker = context.get("shaker")
+        if not shaker:
+            shaker = lib.Shaker(context["shaker_endpoint"], [],
+                                agent_loss_timeout=600)
+            context["shaker"] = shaker
+        r = shaker.run_script(node, command)
+        return r['stdout']
