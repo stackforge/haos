@@ -1,0 +1,21 @@
+#!/bin/sh
+export OS_NO_CACHE='true'
+export OS_TENANT_NAME='admin'
+export OS_USERNAME='admin'
+export OS_PASSWORD='admin'
+export OS_AUTH_STRATEGY='keystone'
+export OS_REGION_NAME='RegionOne'
+export CINDER_ENDPOINT_TYPE='publicURL'
+export GLANCE_ENDPOINT_TYPE='publicURL'
+export KEYSTONE_ENDPOINT_TYPE='publicURL'
+export NOVA_ENDPOINT_TYPE='publicURL'
+export NEUTRON_ENDPOINT_TYPE='publicURL'
+export OS_ENDPOINT_TYPE='publicURL'
+export MURANO_REPO_URL='http://catalog.openstack.org/'
+export OS_AUTH_URL=
+
+export FUEL_HOST=
+export FUEL_USERNAME='root'
+export FUEL_PASSWORD='r00tme'
+
+export SHAKER_SERVER_ENDPOINT=
