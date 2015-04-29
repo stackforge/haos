@@ -15,6 +15,7 @@ How to install
 --------------
 
 1. git clone git://git.openstack.org/stackforge/haos
+2. Make sure that sshpass is installed
 
 
 How to run tests

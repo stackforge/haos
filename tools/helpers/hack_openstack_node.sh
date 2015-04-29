@@ -1,7 +1,7 @@
 #!/bin/bash -xe
 
 SERVER_ENDPOINT=$1
-AGENT_ID=$2
+AGENT_ID=$(hostname)
 
 cd /root/
 if [ ! -d ".venv" ]; then
