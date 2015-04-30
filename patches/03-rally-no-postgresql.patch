@@ -1,0 +1,12 @@
+diff --git a/requirements.txt b/requirements.txt
+index e5fcb10..4213dde 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -19,7 +19,6 @@ paramiko>=1.13.0
+ pbr>=0.6,!=0.7,<1.0
+ PrettyTable>=0.7,<0.8
+ PyYAML>=3.1.0
+-psycopg2
+ python-designateclient>=1.0.0
+ python-glanceclient>=0.15.0
+ python-keystoneclient>=1.1.0
