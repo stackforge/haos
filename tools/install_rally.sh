@@ -2,7 +2,7 @@
 
 TOP_DIR=$(cd $(dirname "$0") && pwd)
 
-RALLY_EXEC="$(which rally)"
+RALLY_EXEC="$(which rally | grep tox)"
 
 if [ -z ${RALLY_EXEC} ]; then
     echo "Install and patch rally"

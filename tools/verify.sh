@@ -2,8 +2,8 @@
 
 echo "Verifying your env (have you tuned etc/openrc already?)"
 
-if [ -z ${SHAKER_SERVER_ENDPOINT} ]; then
-    echo "Specify value for SHAKER_SERVER_ENDPOINT env var"
+if [ -z ${HAOS_SERVER_ENDPOINT} ]; then
+    echo "Specify value for HAOS_SERVER_ENDPOINT env var"
     exit 1
 fi
 

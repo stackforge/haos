@@ -18,4 +18,6 @@ export FUEL_HOST=
 export FUEL_USERNAME='root'
 export FUEL_PASSWORD='r00tme'
 
-export SHAKER_SERVER_ENDPOINT=
+export HAOS_IMAGE="haos-image"
+export HAOS_FLAVOR="haos-flavor"
+export HAOS_SERVER_ENDPOINT=

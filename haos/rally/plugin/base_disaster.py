@@ -1,16 +1,37 @@
-from haos.rally import utils
+# Copyright (c) 2015 Mirantis Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import functools
+import time
+
 from rally.benchmark.scenarios.neutron import utils as neutron_utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark.scenarios.vm import utils as vm_utils
+from rally.benchmark import types
 from rally.common import log as logging
-import time
+import testtools
+
+from haos.rally import utils
 
 LOG = logging.getLogger(__name__)
 
 
 class BaseDisaster(neutron_utils.NeutronScenario,
                    nova_utils.NovaScenario,
-                   vm_utils.VMScenario):
+                   vm_utils.VMScenario,
+                   testtools.TestCase):
 
     def wait_shaker_agent(self, agent_id, timeout=300):
         result = utils.run_command(self.context, agent_id, "hostname",
@@ -39,6 +60,36 @@ class BaseDisaster(neutron_utils.NeutronScenario,
         self.wait_shaker_agent(name, timeout=850)
 
         return vm
+
+    def boot_server_with_agent(self, network_id):
+        flavor_id = types.FlavorResourceType.transform(
+            clients=self._clients,
+            resource_config={'name': self.context["haos_flavor"]})
+        image_id = types.ImageResourceType.transform(
+            clients=self._clients,
+            resource_config={'name': self.context["haos_image"]})
+        kwargs = {'nics': [{"net-id": network_id}]}
+
+        server = self._boot_server(image_id=image_id,
+                                   flavor_id=flavor_id, auto_assign_nic=True,
+                                   **kwargs)
+
+        # extend server instance with helpers
+        server.get_agent_id = functools.partial(utils.get_server_agent_id,
+                                                server=server)
+
+        # wait for agent to become active
+        timeout = time.time() + self.context['haos_join_timeout']
+        agent_id = server.get_agent_id()
+
+        active = None
+        while not active and time.time() < timeout:
+            active = self.run_remote_command(agent_id, 'hostname')
+
+        self.assertIsNotNone(active, 'Server should is expected to be alive')
+
+        LOG.info('Server %s is up and agent is running', server.name)
+        return server
 
     def power_off_controller(self, controller):
         control_node = self.context["power_control_node"]
@@ -245,3 +296,23 @@ class BaseDisaster(neutron_utils.NeutronScenario,
                 raise
         else:
             raise
+
+    def pick_network_id(self):
+        networks = self.context["tenant"].get("networks")
+        self.assertTrue(len(networks) >= 1,
+                        'At least one network is expected in the tenant')
+        return networks[0]['id']
+
+    def kill_remote_process(self, host, process_name):
+        LOG.info('Kill process %s at host %s', process_name, host)
+
+        cmd = ("ps aux | grep '%s' | grep -v grep | awk '{print $2}'" %
+               process_name)
+        pid = self.run_remote_command(host, cmd)
+        LOG.debug('process pid: %s', pid)
+
+        self.run_remote_command(host, 'kill -9 %s' % pid)
+
+    def run_remote_command(self, host, command, timeout=None):
+        timeout = timeout or self.context.get('haos_command_timeout')
+        return self.context.get('haos_remote_control')(host, command, timeout)

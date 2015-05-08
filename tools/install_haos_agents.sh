@@ -1,7 +1,7 @@
 #!/bin/bash -xe
 
 TOP_DIR=$(cd $(dirname "$0") && pwd)
-MARKER="${TOP_DIR}/../.installed"
+MARKER="${TOP_DIR}/../.tox/run/.installed"
 
 SSHPASS_EXEC="$(which sshpass)"
 
@@ -15,7 +15,8 @@ if [ ! -f "${MARKER}" ]; then
 
     sshpass -p ${FUEL_PASSWORD} scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${TOP_DIR}/helpers/hack_fuel_master.sh ${FUEL_USERNAME}@${FUEL_HOST}:/root/
     sshpass -p ${FUEL_PASSWORD} scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${TOP_DIR}/helpers/hack_openstack_node.sh ${FUEL_USERNAME}@${FUEL_HOST}:/root/
-    sshpass -p ${FUEL_PASSWORD} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${FUEL_USERNAME}@${FUEL_HOST} /root/hack_fuel_master.sh ${SHAKER_SERVER_ENDPOINT}
+    sshpass -p ${FUEL_PASSWORD} scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${TOP_DIR}/agent/haosagent ${FUEL_USERNAME}@${FUEL_HOST}:/root/
+    sshpass -p ${FUEL_PASSWORD} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${FUEL_USERNAME}@${FUEL_HOST} /root/hack_fuel_master.sh ${HAOS_SERVER_ENDPOINT}
 
     touch ${MARKER}
 fi

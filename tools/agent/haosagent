@@ -1,0 +1,28 @@
+#!/bin/sh -x
+
+MAC_ADDRESS=`ip -4 l sh eth0 | grep link | awk '{print $2}'`
+
+HAOS_SERVER_ENDPOINT=${1:-$HAOS_SERVER_ENDPOINT}
+AGENT_ID=${2:-$MAC_ADDRESS}
+POLLING_INTERVAL=${3:-2}
+
+while true; do
+    COMMAND=`curl --stderr /dev/null http://${HAOS_SERVER_ENDPOINT}/poll/${AGENT_ID}`
+
+    if [ ! -z "${COMMAND}" ]; then
+        echo ${COMMAND}
+
+        CMD_EXEC="/tmp/haosagentcmd"
+        echo "${COMMAND}" > ${CMD_EXEC}
+        chmod +x ${CMD_EXEC}
+
+        STDOUT=`sh ${CMD_EXEC}`
+
+        CMD_OUT="/tmp/haosagentout"
+        echo ${STDOUT} > ${CMD_OUT}
+
+        curl --stderr /dev/null --data-binary "@${CMD_OUT}" -H "Content-Type: application/binary" http://${HAOS_SERVER_ENDPOINT}/reply/${AGENT_ID}
+    fi
+
+    sleep ${POLLING_INTERVAL}
+done
