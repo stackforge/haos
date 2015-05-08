@@ -26,8 +26,7 @@ class BaseDisaster(neutron_utils.NeutronScenario,
         shaker_endpoint = self.context['shaker_endpoint']
         userdata = USER_DATA % dict(agent_id=name,
                                     server_endpoint=shaker_endpoint)
-        key_name = "my_key"
-        kwargs = {"userdata": userdata, "key_name": key_name}
+        kwargs = {"userdata": userdata}
 
         if nics is not None:
             kwargs['nics'] = nics
@@ -112,7 +111,7 @@ class BaseDisaster(neutron_utils.NeutronScenario,
 
     # Add tcp rule for 22 port and icmp rule
     def add_rules_for_ping(self):
-        self._clients = self._admin_clients
+        #self._clients = self._admin_clients
         sec_groups = self._list_security_groups()
 
         self.clients("nova").security_group_rules.create(
@@ -148,16 +147,18 @@ class BaseDisaster(neutron_utils.NeutronScenario,
         return list_l3_agents
 
     # Get dhcp agent for chosen network on chosen node
-    def get_dhcp_on_chosen_node(self, node, net):
-        # node - name oh node-controller, on which is router
-        # net - network for which check agent node
+    def get_dhcp_on_chosen_node(self, node, net_id):
+        """Reschedule net to agent on the chosen node if it doesn't on it yet
+
+        :param node: controller, om which agent reascheduling is needed
+        :param net_id: id of network which we should check
+        """
         neutron_client = self.clients("neutron")
-        net_id = net["network"]["id"]
         dhcp_agents = neutron_client.list_dhcp_agent_hosting_networks(net_id)
         need_manually_rescheduling = True
         for agent in dhcp_agents["agents"]:
             if agent["host"] == node:
-                need_manually_rescheduling = True
+                need_manually_rescheduling = False
                 break
         if need_manually_rescheduling:
             first_dhcp_agent_id = dhcp_agents["agents"][0]["id"]
@@ -177,20 +178,19 @@ class BaseDisaster(neutron_utils.NeutronScenario,
             else:
                 raise
 
-    def get_l3_on_chosen_node(self, node, router):
+    def get_l3_on_chosen_node(self, node, router_id):
         """Get l3 agent for chosen router on chosen node.
 
-        :param node:
-        :param router:
-        :return:
+        :param node: controller node on which should be router
+        :param router_id: id of chosen router which should be rescheduling
+        :return: None
         """
         neutron_client = self.clients("neutron")
-        router_id = router["router"]["id"]
         l3_agents = neutron_client.list_l3_agent_hosting_routers(router_id)
         need_manually_rescheduling = True
         for agent in l3_agents["agents"]:
             if agent["host"] == node:
-                need_manually_rescheduling = True
+                need_manually_rescheduling = False
                 break
         if need_manually_rescheduling:
             first_l3_agent_id = l3_agents["agents"][0]["id"]
@@ -206,7 +206,7 @@ class BaseDisaster(neutron_utils.NeutronScenario,
                 agent_id = need_agent['id']
                 body = {"router_id": router_id}
                 # TODO(sbelous): review this. We really need to set dhcp_agent?
-                neutron_client.add_router_to_l3_agent(dhcp_agent=agent_id,
+                neutron_client.add_router_to_l3_agent(l3_agent=agent_id,
                                                       body=body)
             else:
                 raise

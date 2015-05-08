@@ -3,13 +3,18 @@ from rally.benchmark.scenarios import base
 from haos.rally.plugin import base_disaster
 from haos.rally import utils
 from rally.common import log as logging
+import time
 
 LOG = logging.getLogger(__name__)
 
 
 class NeutronDisaster(base_disaster.BaseDisaster):
 
-    def check_all_rescedule(self, node):
+    def check_all_reschedule(self, node):
+        """Check that networks and routers reschedule from agents on node
+
+        :param node: node controller on which rescheduling is being checked
+        """
         list_agents = self.clients("neutron").list_agents()
         dhcp_for_node = None
         l3_for_node = None
@@ -19,7 +24,7 @@ class NeutronDisaster(base_disaster.BaseDisaster):
                     dhcp_for_node = agent
                 elif (agent["agent_type"] == "L3 agent"):
                     l3_for_node = agent
-        if (l3_for_node) & (dhcp_for_node):
+        if (l3_for_node is not None) & (dhcp_for_node is not None):
             list_networks = self.clients(
                 "neutron").list_networks_on_dhcp_agent(dhcp_for_node["id"])
             if len(list_networks) == 0:
@@ -29,17 +34,39 @@ class NeutronDisaster(base_disaster.BaseDisaster):
             if len(list_routers) == 0:
                 raise
 
-    # TODO(sbelous): create function find_primary_controller()
     def find_primary_controller(self):
+        """Find primary controller with command hierra role
+
+        (if controller node is primary this command return primary-controller)
+
+        :return: agent endpoint for the node which is primary controller
+        """
         for controller in self.context["controllers"]:
             node = controller["agent_endpoint"]
-            command = "ifconfig | grep br-ex-hapr 1>/dev/null;echo $?"
+            command = "hiera role"
             result = utils.run_command(self.context, node, command=command,
                                        executor="shaker")
-            if result and result[0] == "0":
+            if "primary-controller" in result:
                 return node
 
         return None
+
+    def find_non_primary_controller(self):
+        """Find non primary controller
+
+        :return: the first non primary controller in the list of controllers
+                 or raise
+        """
+        primary_controller = self.find_primary_controller()
+        non_primary_context_controller = None
+        for controller in self.context["controllers"]:
+            if controller["agent_endpoint"] != primary_controller:
+                non_primary_context_controller = controller
+                return non_primary_context_controller
+        if non_primary_context_controller is None:
+            message = "Can't define non primary controller"
+            LOG.debug(message)
+            raise
 
     # TODO(sbelous): write function wait some time
     def wait_some_time(self):
@@ -229,7 +256,7 @@ class NeutronDisaster(base_disaster.BaseDisaster):
             raise
 
         # TODO(sbelous): wait some time
-        self.check_all_rescedule(primary_controller)
+        self.check_all_reschedule(primary_controller)
 
         vm3 = self.boot_server("VM3", nics=[{"net-id": net1_id}])
 
@@ -281,11 +308,9 @@ class NeutronDisaster(base_disaster.BaseDisaster):
         11. Make l3-agent for router1 and one dhcp-agent for net1
             on the same node
         12. drop rabbit port 5673 on node, where is l3-agent for router1
-        13. Boot vm3 in net1
-        14. ping 8.8.8.8 from vm3
-        15. ping between vm1 and vm3 by internal ip
-        16. ping between vm2 and vm3 by floating ip
-        17. Run udhcp on vm1 and vm3
+        13. ping 8.8.8.8 from vm1
+        17. ping between vm2 and vm1 by floating ip
+        18. Run udhcp on vm1
         """
         # Add rules to be able ping
         self.add_rules_for_ping()
@@ -308,13 +333,11 @@ class NeutronDisaster(base_disaster.BaseDisaster):
         # Define internal IP and floating IP
         net1_name = network1["network"]["name"]
         net2_name = network2["network"]["name"]
-        vm1_internal_ip = self.define_fixed_ip_for_vm(vm1, net1_name)
         vm1_floating_ip = self.define_floating_ip_for_vm(vm1, net1_name)
         vm2_floating_ip = self.define_floating_ip_for_vm(vm2, net2_name)
 
         # Check on what agents are router1
         node = self.get_node_on_what_is_agent_for_router(router1)
-
         self.get_dhcp_on_chosen_node(node, network1)
 
         # Check connectivity
@@ -333,34 +356,23 @@ class NeutronDisaster(base_disaster.BaseDisaster):
         utils.run_command(self.context, node, command=command,
                           executor="shaker")
 
-        vm3 = self.boot_server("VM3", nics=[{"net-id": net1_id}])
-
-        vm3_internal_ip = self.define_fixed_ip_for_vm(vm3, net1_name)
-        vm3_floating_ip = self.define_floating_ip_for_vm(vm3, net1_name)
+        command = "iptables -I INPUT 1 -p tcp --dport 5673 -j DROP"
+        utils.run_command(self.context, node, command=command,
+                          executor="shaker")
+        # TODO(kkuznetsova): make function waiting some time
+        # while scheduling is working
+        time.sleep(10)
 
         # dhcp work
         output = utils.run_command(self.context, "VM1", command="udhcpc",
                                    executor="shaker")
         LOG.debug("output = %s", output)
 
-        output = utils.run_command(self.context, "VM3", command="udhcpc",
-                                   executor="shaker")
-        LOG.debug("output = %s", output)
-
         # Check connectivity
-        self.check_connectivity("VM3", "8.8.8.8")
-
-        self.check_connectivity("VM1", vm3_internal_ip)
-        self.check_connectivity("VM3", vm1_internal_ip)
+        self.check_connectivity("VM1", "8.8.8.8")
 
         self.check_connectivity("VM1", vm2_floating_ip)
         self.check_connectivity("VM2", vm1_floating_ip)
-
-        self.check_connectivity("VM2", vm3_floating_ip)
-        self.check_connectivity("VM3", vm2_floating_ip)
-
-        self.check_connectivity("VM1", vm3_floating_ip)
-        self.check_connectivity("VM3 ", vm1_floating_ip)
 
     @base.scenario()
     def reset_primary_controller(self):
@@ -447,7 +459,7 @@ class NeutronDisaster(base_disaster.BaseDisaster):
 
         # TODO(sbelous): wait some time
 
-        self.check_all_rescedule(primary_controller)
+        self.check_all_reschedule(primary_controller)
 
         vm3 = self.boot_server("VM3", nics=[{"net-id": net1_id}])
 
@@ -557,7 +569,7 @@ class NeutronDisaster(base_disaster.BaseDisaster):
 
         # TODO(sbelous): wait some time
 
-        self.check_all_rescedule(primary_controller)
+        self.check_all_reschedule(primary_controller)
 
         vm3 = self.boot_server("VM3", nics=[{"net-id": net1_id}])
 
@@ -610,18 +622,29 @@ class NeutronDisaster(base_disaster.BaseDisaster):
         11. Boot vm3 in network1
         12. ping 8.8.8.8 from vm3
         13. ping between vm1 and vm3 by internal ip
-        14. ping between vm2 and vm3 by floating ip
+        14. ping between vm1 and vm2 by floating ip
         15. Run udhcp on vm1 and vm3
         """
 
-        # Create 1 network, subnt, router and join this construction
-        network1, subnets1, router1 = self.create_network_subnet_router()
-        # Create 1 network, subnt, router and join this construction
-        network2, subnets2, router2 = self.create_network_subnet_router()
+        networks = self.context["tenant"].get("networks")
+        if networks is None:
+            message = "Networks haven't been created with context"
+            LOG.debug(message)
+            raise
 
-        # boot vms
-        net1_id = network1["network"]["id"]
-        net2_id = network2["network"]["id"]
+        if len(networks) < 2:
+            message = "Haven't enough networks for the test"
+            LOG.debug(message)
+            raise
+
+        network1 = networks[0]
+        network2 = networks[1]
+
+        router1_id = network1.get("router_id")
+
+        net1_id = network1["id"]
+        net2_id = network2["id"]
+
         vm1 = self.boot_server("VM1", nics=[{"net-id": net1_id}])
         vm2 = self.boot_server("VM2", nics=[{"net-id": net2_id}])
 
@@ -629,63 +652,60 @@ class NeutronDisaster(base_disaster.BaseDisaster):
         self.add_rules_for_ping()
 
         # floatingIp for VMs
-        self.associate_floating_ip(vm1)
-        self.associate_floating_ip(vm2)
+        self._attach_floating_ip(vm1, "net04_ext")
+        self._attach_floating_ip(vm2, "net04_ext")
 
         # Define internal IP and floating IP
-        net1_name = network1["network"]["name"]
-        net2_name = network2["network"]["name"]
+        net1_name = network1["name"]
+        net2_name = network2["name"]
         vm1_internal_ip = self.define_fixed_ip_for_vm(vm1, net1_name)
         vm1_floating_ip = self.define_floating_ip_for_vm(vm1, net1_name)
         vm2_floating_ip = self.define_floating_ip_for_vm(vm2, net2_name)
 
-        # Find primary controller
-        primary_controller = self.find_primary_controller()
-
+         # Find primary controller
+        non_primary_context_controller = self.find_non_primary_controller()
+        non_primary_controller = \
+            non_primary_context_controller['agent_endpoint']
         # Get l3 agent for router1 and one dhcp agent for network1
-        # on primary controller
-        self.get_dhcp_on_chosen_node(primary_controller, network1)
-        self.get_l3_on_chosen_node(primary_controller, router1)
+        # on non primary controller
+        self.get_dhcp_on_chosen_node(non_primary_controller, net1_id)
+        self.get_l3_on_chosen_node(non_primary_controller, router1_id)
 
         # dhcp work
-        output = utils.run_command(self.context, "VM1", command="udhcpc",
+        output = utils.run_command(self.context, "VM1", command="sudo udhcpc",
                                    executor="shaker")
-        LOG.debug("output = %s", output)
+        if output == "":
+            message = "dhcp agent doesn't work for VM1"
+            LOG.debug("output = %s", message)
 
         # Check connectivity
         self.check_connectivity("VM2", "8.8.8.8")
         self.check_connectivity("VM1", vm2_floating_ip)
         self.check_connectivity("VM2", vm1_floating_ip)
 
-        non_primary_context_controller = None
-        non_primary_controller = None
-        for controller in self.context["controllers"]:
-            if controller["agent_endpoint"] != primary_controller:
-                non_primary_context_controller = controller
-                non_primary_controller = controller["agent_endpoint"]
-                break
-        if non_primary_context_controller:
-            self.power_off_controller(non_primary_context_controller)
-        else:
-            raise
+        self.power_off_controller(non_primary_context_controller)
 
         # TODO(sbelous): wait some time
+        self.wait_some_time()
 
-        self.check_all_rescedule(non_primary_controller)
+        self.check_all_reschedule(non_primary_controller)
 
         vm3 = self.boot_server("VM3", nics=[{"net-id": net1_id}])
 
         vm3_internal_ip = self.define_fixed_ip_for_vm(vm3, net1_name)
-        vm3_floating_ip = self.define_floating_ip_for_vm(vm3, net1_name)
 
         # dhcp work
-        output = utils.run_command(self.context, "VM1", command="udhcpc",
+        output = utils.run_command(self.context, "VM1", command="sudo udhcpc",
                                    executor="shaker")
-        LOG.debug("output = %s", output)
+        if output == "":
+            message = "dhcp agent doesn't work for VM1"
+            LOG.debug("output = %s", message)
 
-        output = utils.run_command(self.context, "VM3", command="udhcpc",
+        output = utils.run_command(self.context, "VM3", command="sudo udhcpc",
                                    executor="shaker")
-        LOG.debug("output = %s", output)
+        if output == "":
+            message = "dhcp agent doesn't work for VM1"
+            LOG.debug("output = %s", message)
 
         # Check connectivity
         self.check_connectivity("VM3", "8.8.8.8")
@@ -695,9 +715,3 @@ class NeutronDisaster(base_disaster.BaseDisaster):
 
         self.check_connectivity("VM1", vm2_floating_ip)
         self.check_connectivity("VM2", vm1_floating_ip)
-
-        self.check_connectivity("VM2", vm3_floating_ip)
-        self.check_connectivity("VM3", vm2_floating_ip)
-
-        self.check_connectivity("VM1", vm3_floating_ip)
-        self.check_connectivity("VM3 ", vm1_floating_ip)
