@@ -15,6 +15,7 @@ if [ -z ${RALLY_EXEC} ]; then
     git checkout ${RALLY_VERSION}
     git apply ${TOP_DIR}/../patches/01-rally-plugin-dir.patch
     git apply ${TOP_DIR}/../patches/02-rally-install-no-sudo.patch
+    git apply ${TOP_DIR}/../patches/03-rally-no-postgresql.patch
 
     python setup.py install
 
