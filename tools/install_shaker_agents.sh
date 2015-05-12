@@ -3,6 +3,13 @@
 TOP_DIR=$(cd $(dirname "$0") && pwd)
 MARKER="${TOP_DIR}/../.installed"
 
+SSHPASS_EXEC="$(which sshpass)"
+
+if [ -z ${SSHPASS_EXEC} ]; then
+    echo "sshpass is not installed!"
+    exit 1
+fi
+
 if [ ! -f "${MARKER}" ]; then
     echo "Install Shaker agents onto OpenStack nodes"
 
