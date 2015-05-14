@@ -32,4 +32,4 @@ def run_command(context, node, command, recover_command=None,
                                 agent_loss_timeout=600)
             context["shaker"] = shaker
         r = shaker.run_script(node, command)
-        return r['stdout']
+        return r.get('stdout')
