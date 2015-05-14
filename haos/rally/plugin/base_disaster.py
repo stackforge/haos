@@ -58,7 +58,7 @@ class BaseDisaster(neutron_utils.NeutronScenario,
         self._add_interface_router(subnets[0]["subnet"], router["router"])
         return network, subnets, router
 
-        # This function associate floating IP for delivered VM
+    # This function associate floating IP for delivered VM
     def associate_floating_ip(self, server=None):
         self._clients = self._admin_clients
         nets = self._list_networks()
@@ -210,3 +210,39 @@ class BaseDisaster(neutron_utils.NeutronScenario,
                                                       body=body)
             else:
                 raise
+
+    def check_reschedule_for_l3_on_node(self, node):
+        """Check that routers reschedule from agents on node
+
+        :param node: node controller on which rescheduling is being checked
+        """
+        list_l3_agents = self.get_list_l3_agents()
+        l3_for_node = None
+        for l3_agent in list_l3_agents["agents"]:
+            if (l3_agent["host"] == node):
+                l3_for_node = l3_agent
+        if (l3_for_node is not None):
+            list_routers = self.clients(
+                "neutron").list_routers_on_l3_agent(l3_for_node["id"])
+            if len(list_routers) == 0:
+                raise
+        else:
+            raise
+
+    def check_reschedule_for_dhcp_on_node(self, node):
+        """Check that networks and routers reschedule from agents on node
+
+        :param node: node controller on which rescheduling is being checked
+        """
+        list_dhcp_agents = self.get_list_dhcp_agents()
+        dhcp_for_node = None
+        for dhcp_agent in list_dhcp_agents["agents"]:
+            if (dhcp_agent["host"] == node):
+                dhcp_for_node = dhcp_agent
+        if (dhcp_for_node is not None):
+            list_networks = self.clients(
+                "neutron").list_networks_on_dhcp_agent(dhcp_for_node["id"])
+            if len(list_networks) == 0:
+                raise
+        else:
+            raise
