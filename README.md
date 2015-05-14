@@ -16,7 +16,8 @@ How to install
 
 1. Clone the repository:
 ```bash
-git clone git://git.openstack.org/stackforge/haos```
+git clone git://git.openstack.org/stackforge/haos
+```
 
 2. Make sure that ``sshpass`` is installed - on Ubuntu do ``sudo apt-get install sshpass``
 
@@ -24,16 +25,18 @@ git clone git://git.openstack.org/stackforge/haos```
 
 4. Import ``openrc`` into your environment by doing
 ```bash
-. etc/openrc.local```
+source etc/openrc.local
+```
 
 5. Run tox:
 ```bash
-tox -erun```
-
+tox -erun
+```
 
 How to run tests
 ----------------
 
 Run scenario with the command:
 ```bash
-tox -erun <scenario>```
+tox -erun <scenario>
+```
