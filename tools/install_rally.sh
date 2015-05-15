@@ -14,8 +14,7 @@ if [ -z ${RALLY_EXEC} ]; then
     RALLY_VERSION="$(git describe --abbrev=0)"
     git checkout ${RALLY_VERSION}
     git apply ${TOP_DIR}/../patches/01-rally-plugin-dir.patch
-    git apply ${TOP_DIR}/../patches/02-rally-install-no-sudo.patch
-    git apply ${TOP_DIR}/../patches/03-rally-no-postgresql.patch
+    git apply ${TOP_DIR}/../patches/02-rally-no-postgresql.patch
 
     python setup.py install
 
