@@ -205,7 +205,6 @@ class BaseDisaster(neutron_utils.NeutronScenario,
             if need_agent:
                 agent_id = need_agent['id']
                 body = {"router_id": router_id}
-                # TODO(sbelous): review this. We really need to set dhcp_agent?
                 neutron_client.add_router_to_l3_agent(l3_agent=agent_id,
                                                       body=body)
             else:
@@ -218,13 +217,13 @@ class BaseDisaster(neutron_utils.NeutronScenario,
         """
         list_l3_agents = self.get_list_l3_agents()
         l3_for_node = None
-        for l3_agent in list_l3_agents["agents"]:
+        for l3_agent in list_l3_agents:
             if (l3_agent["host"] == node):
                 l3_for_node = l3_agent
         if (l3_for_node is not None):
             list_routers = self.clients(
                 "neutron").list_routers_on_l3_agent(l3_for_node["id"])
-            if len(list_routers) == 0:
+            if len(list_routers) != 0:
                 raise
         else:
             raise
@@ -236,13 +235,13 @@ class BaseDisaster(neutron_utils.NeutronScenario,
         """
         list_dhcp_agents = self.get_list_dhcp_agents()
         dhcp_for_node = None
-        for dhcp_agent in list_dhcp_agents["agents"]:
+        for dhcp_agent in list_dhcp_agents:
             if (dhcp_agent["host"] == node):
                 dhcp_for_node = dhcp_agent
         if (dhcp_for_node is not None):
             list_networks = self.clients(
                 "neutron").list_networks_on_dhcp_agent(dhcp_for_node["id"])
-            if len(list_networks) == 0:
+            if len(list_networks) != 0:
                 raise
         else:
             raise

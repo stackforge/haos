@@ -118,7 +118,7 @@ class NeutronL3Disaster(base_disaster.BaseDisaster):
         # TODO(sbelous): wait some time
         self.wait_some_time()
 
-        #self.check_all_reschedule(non_primary_controller)
+        self.check_reschedule_for_l3_on_node(node=node_with_agent)
 
         vm3 = self.boot_server("VM3", nics=[{"net-id": net1_id}])
 
@@ -219,7 +219,7 @@ class NeutronL3Disaster(base_disaster.BaseDisaster):
 
         quantity_of_l3_agents = len(self.get_list_l3_agents())
         node_with_banned_l3_agents = []
-        for i in range(1, quantity_of_l3_agents - 1):
+        for i in xrange(quantity_of_l3_agents - 1):
             # Check on what agents are router1 and ban this agent
             node_with_agent = self.get_node_on_what_is_agent_for_router(
                 router1_id)
