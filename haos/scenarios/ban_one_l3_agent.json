@@ -19,21 +19,19 @@
         "network": {
           "networks_per_tenant": 2
         },
+        "cloud":{ },
         "cloud_nodes": {
           "controllers": [
             {
-              "agent_endpoint": "node-1.domain.tld"
+              "agent_endpoint": "node-4.domain.tld"
             },
             {
-              "agent_endpoint": "node-2.domain.tld"
+              "agent_endpoint": "node-5.domain.tld"
             },
             {
               "agent_endpoint": "node-3.domain.tld"
             }
-          ],
-          "shaker_endpoint": "172.18.76.21:5999",
-          "shaker_image": "2fb29a22-b351-4466-83ff-21446097b8c9",
-          "default_flavor": "18"
+          ]
         }
       }
     }

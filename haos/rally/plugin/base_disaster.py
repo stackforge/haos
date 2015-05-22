@@ -144,9 +144,8 @@ class BaseDisaster(neutron_utils.NeutronScenario,
     def check_connectivity(self, server, adress_ip):
         # server - server where we try to ping
         # address_ip - what ping
-        command = "ping -c1 %s 1>/dev/null;echo $?" % adress_ip
-        output = utils.run_command(self.context, server, command=command,
-                                   executor="shaker")
+        command = "ping -W 5 -c1 %s 1>/dev/null;echo $?" % adress_ip
+        output = self.run_remote_command(server, command)
         return output and output[0] == "0"
 
     # function: get node for l3-agent

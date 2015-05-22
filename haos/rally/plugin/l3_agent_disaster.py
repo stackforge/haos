@@ -2,7 +2,6 @@
 from rally.benchmark.scenarios import base
 
 from haos.rally.plugin import base_disaster
-from haos.rally import utils
 from rally.common import log as logging
 import time
 
@@ -31,11 +30,11 @@ class NeutronL3Disaster(base_disaster.BaseDisaster):
         :param node: controller on which we should ban l3-agent
         :return:
         """
-        command = "pcs resource ban p-neutron-l3-agent " + node
-        utils.run_command(self.context, node, command=command,
-                          executor="shaker")
+        command = "pcs resource ban p_neutron-l3-agent " + node
+        output = self.run_remote_command(node, command)
+        return output
 
-     # TODO(sbelous): write function wait some time
+    # TODO(sbelous): write function wait some time
     def wait_some_time(self):
         pass
 
@@ -89,8 +88,8 @@ class NeutronL3Disaster(base_disaster.BaseDisaster):
         net1_id = network1["id"]
         net2_id = network2["id"]
 
-        vm1 = self.boot_server("VM1", nics=[{"net-id": net1_id}])
-        vm2 = self.boot_server("VM2", nics=[{"net-id": net2_id}])
+        vm1 = self.boot_server_with_agent(net1_id)
+        vm2 = self.boot_server_with_agent(net2_id)
 
         # Add rules to be able ping
         self.add_rules_for_ping()
@@ -107,9 +106,9 @@ class NeutronL3Disaster(base_disaster.BaseDisaster):
         vm2_floating_ip = self.define_floating_ip_for_vm(vm2, net2_name)
 
         # Check connectivity
-        self.check_connectivity("VM2", "8.8.8.8")
-        self.check_connectivity("VM1", vm2_floating_ip)
-        self.check_connectivity("VM2", vm1_floating_ip)
+        self.check_connectivity(vm2.get_agent_id(), "8.8.8.8")
+        self.check_connectivity(vm1.get_agent_id(), vm2_floating_ip)
+        self.check_connectivity(vm2.get_agent_id(), vm1_floating_ip)
 
         # Check on what agents are router1 and ban this agent
         node_with_agent = self.get_node_on_what_is_agent_for_router(router1_id)
@@ -120,20 +119,20 @@ class NeutronL3Disaster(base_disaster.BaseDisaster):
 
         self.check_reschedule_for_l3_on_node(node=node_with_agent)
 
-        vm3 = self.boot_server("VM3", nics=[{"net-id": net1_id}])
+        vm3 = self.boot_server_with_agent(net1_id)
 
         vm3_internal_ip = self.define_fixed_ip_for_vm(vm3, net1_name)
 
         # Check connectivity
-        self.check_connectivity("VM3", "8.8.8.8")
+        self.check_connectivity(vm3.get_agent_id(), "8.8.8.8")
 
-        self.check_connectivity("VM1", vm3_internal_ip)
-        self.check_connectivity("VM3", vm1_internal_ip)
+        self.check_connectivity(vm1.get_agent_id(), vm3_internal_ip)
+        self.check_connectivity(vm3.get_agent_id(), vm1_internal_ip)
 
-        self.check_connectivity("VM1", vm2_floating_ip)
-        self.check_connectivity("VM2", vm1_floating_ip)
+        self.check_connectivity(vm1.get_agent_id(), vm2_floating_ip)
+        self.check_connectivity(vm2.get_agent_id(), vm1_floating_ip)
 
-        self.check_connectivity("VM3", vm2_floating_ip)
+        self.check_connectivity(vm3.get_agent_id(), vm2_floating_ip)
 
     @base.scenario()
     def ban_some_l3_agents(self):
@@ -195,8 +194,8 @@ class NeutronL3Disaster(base_disaster.BaseDisaster):
         net1_id = network1["id"]
         net2_id = network2["id"]
 
-        vm1 = self.boot_server("VM1", nics=[{"net-id": net1_id}])
-        vm2 = self.boot_server("VM2", nics=[{"net-id": net2_id}])
+        vm1 = self.boot_server_with_agent(net1_id)
+        vm2 = self.boot_server_with_agent(net2_id)
 
         # Add rules to be able ping
         self.add_rules_for_ping()
@@ -213,12 +212,13 @@ class NeutronL3Disaster(base_disaster.BaseDisaster):
         vm2_floating_ip = self.define_floating_ip_for_vm(vm2, net2_name)
 
         # Check connectivity
-        self.check_connectivity("VM2", "8.8.8.8")
-        self.check_connectivity("VM1", vm2_floating_ip)
-        self.check_connectivity("VM2", vm1_floating_ip)
+        self.check_connectivity(vm2.get_agent_id(), "8.8.8.8")
+        self.check_connectivity(vm1.get_agent_id(), vm2_floating_ip)
+        self.check_connectivity(vm2.get_agent_id(), vm1_floating_ip)
 
         quantity_of_l3_agents = len(self.get_list_l3_agents())
         node_with_banned_l3_agents = []
+        print(self.get_list_l3_agents())
         for i in xrange(quantity_of_l3_agents - 1):
             # Check on what agents are router1 and ban this agent
             node_with_agent = self.get_node_on_what_is_agent_for_router(
@@ -227,24 +227,24 @@ class NeutronL3Disaster(base_disaster.BaseDisaster):
             self.ban_l3_agent_on_node(node=node_with_agent)
             # TODO(sbelous): wait some time
             self.wait_some_time()
-            time.sleep(15)
+            time.sleep(30)
 
         if node_with_banned_l3_agents is None:
             raise
         for node_with_banned_agent in node_with_banned_l3_agents:
             self.check_reschedule_for_l3_on_node(node_with_banned_agent)
 
-        vm3 = self.boot_server("VM3", nics=[{"net-id": net1_id}])
+        vm3 = self.boot_server_with_agent(net1_id)
 
         vm3_internal_ip = self.define_fixed_ip_for_vm(vm3, net1_name)
 
         # Check connectivity
-        self.check_connectivity("VM3", "8.8.8.8")
+        self.check_connectivity(vm3.get_agent_id(), "8.8.8.8")
 
-        self.check_connectivity("VM1", vm3_internal_ip)
-        self.check_connectivity("VM3", vm1_internal_ip)
+        self.check_connectivity(vm1.get_agent_id(), vm3_internal_ip)
+        self.check_connectivity(vm3.get_agent_id(), vm1_internal_ip)
 
-        self.check_connectivity("VM1", vm2_floating_ip)
-        self.check_connectivity("VM2", vm1_floating_ip)
+        self.check_connectivity(vm1.get_agent_id(), vm2_floating_ip)
+        self.check_connectivity(vm2.get_agent_id(), vm1_floating_ip)
 
-        self.check_connectivity("VM3", vm2_floating_ip)
+        self.check_connectivity(vm3.get_agent_id(), vm2_floating_ip)
