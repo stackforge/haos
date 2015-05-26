@@ -35,7 +35,7 @@ class NeutronL3Disaster(base_disaster.BaseDisaster):
         utils.run_command(self.context, node, command=command,
                           executor="shaker")
 
-     # TODO(sbelous): write function wait some time
+    # TODO(sbelous): write function wait some time
     def wait_some_time(self):
         pass
 

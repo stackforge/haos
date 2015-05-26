@@ -223,7 +223,7 @@ class NeutronDisaster(base_disaster.BaseDisaster):
         vm1_floating_ip = self.define_floating_ip_for_vm(vm1, net1_name)
         vm2_floating_ip = self.define_floating_ip_for_vm(vm2, net2_name)
 
-         # Find primary controller
+        # Find primary controller
         primary_context_controller = None
         primary_controller = self.find_primary_controller()
         for controller in self.context["controllers"]:
@@ -435,7 +435,7 @@ class NeutronDisaster(base_disaster.BaseDisaster):
         vm1_floating_ip = self.define_floating_ip_for_vm(vm1, net1_name)
         vm2_floating_ip = self.define_floating_ip_for_vm(vm2, net2_name)
 
-         # Find primary controller
+        # Find primary controller
         primary_controller = self.find_primary_controller()
         for controller in self.context["controllers"]:
             if controller['agent_endpoint'] == primary_controller:
@@ -555,7 +555,7 @@ class NeutronDisaster(base_disaster.BaseDisaster):
         vm1_floating_ip = self.define_floating_ip_for_vm(vm1, net1_name)
         vm2_floating_ip = self.define_floating_ip_for_vm(vm2, net2_name)
 
-         # Find primary controller
+        # Find primary controller
         non_primary_context_controller = self.find_non_primary_controller()
         non_primary_controller = \
             non_primary_context_controller['agent_endpoint']
