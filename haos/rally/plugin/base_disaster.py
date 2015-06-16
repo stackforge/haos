@@ -161,7 +161,7 @@ class BaseDisaster(neutron_utils.NeutronScenario,
 
     # Add tcp rule for 22 port and icmp rule
     def add_rules_for_ping(self):
-        #self._clients = self._admin_clients
+        # self._clients = self._admin_clients
         sec_groups = self._list_security_groups()
 
         self.clients("nova").security_group_rules.create(

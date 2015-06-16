@@ -1,0 +1,40 @@
+{
+  "ControllerShutdown.power_off_and_on_one_controller": [
+    {
+      "runner": {
+        "type": "serial",
+        "times": 1
+      },
+      "context": {
+        "cloud_nodes": {
+          "controllers": [
+            {
+              "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-1 --type headless",
+              "hardware_power_off_cmd": "VBoxManage controlvm fuel-slave-1 poweroff",
+              "power_off_timeout": 180,
+              "power_on_timeout": 90
+            },
+            {
+              "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-2 --type headless",
+              "hardware_power_off_cmd": "VBoxManage controlvm fuel-slave-2 poweroff",
+              "power_off_timeout": 180,
+              "power_on_timeout": 90
+            },
+            {
+              "hardware_power_on_cmd": "VBoxManage startvm fuel-slave-3 --type headless",
+              "hardware_power_off_cmd": "VBoxManage controlvm fuel-slave-3 poweroff",
+              "power_off_timeout": 180,
+              "power_on_timeout": 90
+            }
+          ],
+          "power_control_node": {
+            "public_ip": "172.18.78.30",
+            "user": "xwizard",
+            "password": "xWizard707"
+          },
+          "remote_control_type": "ssh"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "RunCommand.run_command_on_random_controller": [
+    {
+      "args": {
+        "command": "iptables -I INPUT 1 -p tcp --destination-port galeracheck -j DROP && sleep 20 && iptables -D INPUT -p tcp --destination-port galeracheck -j DROP",
+        "timeout": 300
+      },
+      "runner": {
+        "type": "serial",
+        "times": 10
+      },
+      "context": {
+        "cloud_nodes": {
+          "controllers": [
+            {
+              "public_ip": "172.16.0.4",
+              "user": "root",
+              "password": "secret"
+            },
+            {
+              "public_ip": "172.16.0.5",
+              "user": "root",
+              "password": "secret"
+            },
+            {
+              "public_ip": "172.16.0.4",
+              "user": "root",
+              "password": "secret"
+            }
+          ],
+          "remote_control_type": "ssh"
+        }
+      }
+    }
+  ]
+}
